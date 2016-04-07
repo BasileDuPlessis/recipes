@@ -14,3 +14,6 @@ libraryDependencies ++= Seq(
   )
 
 
+enablePlugins(DockerPlugin)
+
+dockerAutoPackageJavaApplication()
