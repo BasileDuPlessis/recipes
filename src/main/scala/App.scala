@@ -5,20 +5,29 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
-
+import com.sksamuel.elastic4s.{ElasticClient, RichSearchResponse}
+import scala.concurrent.Future
 import scala.io.StdIn
 
 object App {
 
-  val route =
+  def queryLastRecipes(client:ElasticClient): RichSearchResponse = {
+    import com.sksamuel.elastic4s.ElasticDsl._
+    client.execute(search in "recipes" / "recipe").await
+  }
+
+  def route(client:ElasticClient) = {
     path("hello") {
       get {
-        complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Say hello to akka-http</h1>"))
+        complete(HttpEntity(ContentTypes.`text/html(UTF-8)`,
+          queryLastRecipes(client).original.getHits.hits.map(_.sourceAsString()).mkString("")
+        ))
       }
     }
+  }
 
   def main(args: Array[String]) {
-
+/*
     implicit val system = ActorSystem("my-system")
     implicit val materializer = ActorMaterializer()
     // needed for the future flatMap/onComplete in the end
@@ -31,7 +40,7 @@ object App {
     bindingFuture
       .flatMap(_.unbind()) // trigger unbinding from the port
       .onComplete(_ ⇒ system.terminate()) // and shutdown when done
-
+*/
   }
 
 }
